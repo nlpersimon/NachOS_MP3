@@ -37,6 +37,7 @@ Thread::Thread(char* threadName, int threadID)
 {
 	ID = threadID;
     name = threadName;
+    priority = 0;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;

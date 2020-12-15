@@ -102,6 +102,8 @@ class Thread {
     void setStatus(ThreadStatus st) { status = st; }
     ThreadStatus getStatus() { return (status); }
 	char* getName() { return (name); }
+
+  int getPriority() { return (priority); }
     
 	int getID() { return (ID); }
     void Print() { cout << name; }
@@ -116,6 +118,7 @@ class Thread {
     ThreadStatus status;	// ready, running or blocked
     char* name;
 	int   ID;
+  int priority;
     void StackAllocate(VoidFunctionPtr func, void *arg);
     				// Allocate a stack for thread.
 				// Used internally by Fork()
