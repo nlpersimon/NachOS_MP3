@@ -31,7 +31,9 @@
 
 Scheduler::Scheduler()
 { 
-    readyList = new List<Thread *>; 
+    L1 = new List<Thread *>;
+    L2 = new List<Thread *>;
+    L3 = new List<Thread *>;
     toBeDestroyed = NULL;
 } 
 
@@ -42,7 +44,9 @@ Scheduler::Scheduler()
 
 Scheduler::~Scheduler()
 { 
-    delete readyList; 
+    delete L1; 
+    delete L2; 
+    delete L3; 
 } 
 
 //----------------------------------------------------------------------
@@ -57,10 +61,29 @@ void
 Scheduler::ReadyToRun (Thread *thread)
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
-    DEBUG(dbgThread, "Putting thread on ready list: " << thread->getName());
+    int queueLevel = priorityToLevel(thread->getPriority());
+    DEBUG(dbgSchedule, "Thread " << thread->getID() << " is inserted into queue L" << queueLevel);
 	//cout << "Putting thread on ready list: " << thread->getName() << endl ;
     thread->setStatus(READY);
-    readyList->Append(thread);
+    if (queueLevel == 1) {
+        L1->Append(thread);
+    } else if (queueLevel == 2) {
+        L2->Append(thread);
+    } else {
+        L3->Append(thread);
+    }
+}
+
+int
+Scheduler::priorityToLevel (int priority)
+{
+    if (priority >= 100 & priority <= 149) {
+        return 1;
+    } else if (priority >= 50 & priority <= 99) {
+        return 2;
+    } else {
+        return 3;
+    }
 }
 
 //----------------------------------------------------------------------
@@ -76,10 +99,18 @@ Scheduler::FindNextToRun ()
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
 
-    if (readyList->IsEmpty()) {
-		return NULL;
+    if (L1->IsEmpty()) {
+		if (L2->IsEmpty()) {
+            if (L3->IsEmpty()) {
+                return NULL;
+            } else {
+                return L3->RemoveFront();
+            }
+        } else {
+            return L2-> RemoveFront();
+        }
     } else {
-    	return readyList->RemoveFront();
+    	return L1->RemoveFront();
     }
 }
 
@@ -174,6 +205,10 @@ Scheduler::CheckToBeDestroyed()
 void
 Scheduler::Print()
 {
-    cout << "Ready list contents:\n";
-    readyList->Apply(ThreadPrint);
+    cout << "L1 contents:\n";
+    L1->Apply(ThreadPrint);
+    cout << "L2 contents:\n";
+    L2->Apply(ThreadPrint);
+    cout << "L3 contents:\n";
+    L3->Apply(ThreadPrint);
 }
