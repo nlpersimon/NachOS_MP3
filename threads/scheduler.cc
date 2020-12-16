@@ -62,7 +62,6 @@ Scheduler::ReadyToRun (Thread *thread)
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
     int queueLevel = priorityToLevel(thread->getPriority());
-    DEBUG(dbgSchedule, "Thread " << thread->getID() << " is inserted into queue L" << queueLevel);
 	//cout << "Putting thread on ready list: " << thread->getName() << endl ;
     thread->setStatus(READY);
     if (queueLevel == 1) {
@@ -217,6 +216,7 @@ Scheduler::Print()
 SchedQueue::SchedQueue()
 {
     readyList = new List<Thread *>;
+    queueLevel = 0;
 }
 
 SchedQueue::~SchedQueue()
@@ -224,20 +224,35 @@ SchedQueue::~SchedQueue()
     delete readyList;
 }
 
+void
+SchedQueue::InsertIntoQueue(Thread* thread)
+{
+    readyList->Append(thread); 
+    DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "] Thread [" << thread->getID() << "] is inserted into queue L[" << queueLevel << "]");
+}
+
 Thread*
-L1Queue::FindNextToRun()
+SchedQueue::FindNextToRun()
+{
+    Thread *thread = RemoveFromQueue();
+    DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "] Thread [" << thread->getID() << "] is removed from queue L[" << queueLevel << "]");
+    return thread;
+}
+
+Thread*
+L1Queue::RemoveFromQueue()
 {
     return readyList->RemoveFront();
 }
 
 Thread*
-L2Queue::FindNextToRun()
+L2Queue::RemoveFromQueue()
 {
     return readyList->RemoveFront();
 }
 
 Thread*
-L3Queue::FindNextToRun()
+L3Queue::RemoveFromQueue()
 {
     return readyList->RemoveFront();
 }
