@@ -31,9 +31,9 @@
 
 Scheduler::Scheduler()
 { 
-    L1 = new List<Thread *>;
-    L2 = new List<Thread *>;
-    L3 = new List<Thread *>;
+    L1 = new L1Queue;
+    L2 = new L2Queue;
+    L3 = new L3Queue;
     toBeDestroyed = NULL;
 } 
 
@@ -66,11 +66,11 @@ Scheduler::ReadyToRun (Thread *thread)
 	//cout << "Putting thread on ready list: " << thread->getName() << endl ;
     thread->setStatus(READY);
     if (queueLevel == 1) {
-        L1->Append(thread);
+        L1->InsertIntoQueue(thread);
     } else if (queueLevel == 2) {
-        L2->Append(thread);
+        L2->InsertIntoQueue(thread);
     } else {
-        L3->Append(thread);
+        L3->InsertIntoQueue(thread);
     }
 }
 
@@ -104,13 +104,13 @@ Scheduler::FindNextToRun ()
             if (L3->IsEmpty()) {
                 return NULL;
             } else {
-                return L3->RemoveFront();
+                return L3->FindNextToRun();
             }
         } else {
-            return L2-> RemoveFront();
+            return L2->FindNextToRun();
         }
     } else {
-    	return L1->RemoveFront();
+    	return L1->FindNextToRun();
     }
 }
 
@@ -206,9 +206,38 @@ void
 Scheduler::Print()
 {
     cout << "L1 contents:\n";
-    L1->Apply(ThreadPrint);
+    L1->Print();
     cout << "L2 contents:\n";
-    L2->Apply(ThreadPrint);
+    L2->Print();
     cout << "L3 contents:\n";
-    L3->Apply(ThreadPrint);
+    L3->Print();
+}
+
+
+SchedQueue::SchedQueue()
+{
+    readyList = new List<Thread *>;
+}
+
+SchedQueue::~SchedQueue()
+{
+    delete readyList;
+}
+
+Thread*
+L1Queue::FindNextToRun()
+{
+    return readyList->RemoveFront();
+}
+
+Thread*
+L2Queue::FindNextToRun()
+{
+    return readyList->RemoveFront();
+}
+
+Thread*
+L3Queue::FindNextToRun()
+{
+    return readyList->RemoveFront();
 }

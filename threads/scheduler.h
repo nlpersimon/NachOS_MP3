@@ -13,6 +13,46 @@
 #include "list.h"
 #include "thread.h"
 
+
+class SchedQueue {
+  public:
+    SchedQueue();
+    ~SchedQueue();
+
+    virtual Thread* FindNextToRun() = 0;
+    void InsertIntoQueue(Thread* thread) { readyList->Append(thread); }
+    bool IsEmpty() { return readyList->IsEmpty(); }
+    void Print() { readyList->Apply(ThreadPrint); }
+
+  protected:
+    List<Thread *> *readyList;
+
+};
+
+class L1Queue: public SchedQueue {
+  public:
+    L1Queue() {};
+    ~L1Queue() {};
+    Thread* FindNextToRun();
+
+};
+
+class L2Queue: public SchedQueue {
+  public:
+    L2Queue() {};
+    ~L2Queue() {};
+    Thread* FindNextToRun();
+
+};
+
+class L3Queue: public SchedQueue {
+  public:
+    L3Queue() {};
+    ~L3Queue() {};
+    Thread* FindNextToRun();
+
+};
+
 // The following class defines the scheduler/dispatcher abstraction -- 
 // the data structures and operations needed to keep track of which 
 // thread is running, and which threads are ready but not running.
@@ -36,10 +76,11 @@ class Scheduler {
     // SelfTest for scheduler is implemented in class Thread
     
   private:
-    List<Thread *> *L1, *L2, *L3;
+    L1Queue *L1;
+    L2Queue *L2;
+    L3Queue *L3;
 				// but not running
     Thread *toBeDestroyed;	// finishing thread to be destroyed
     				// by the next thread that runs
 };
-
 #endif // SCHEDULER_H
