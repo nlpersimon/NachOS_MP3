@@ -234,6 +234,7 @@ SchedQueue::IsEmpty()
 void
 SchedQueue::InsertIntoQueue(Thread* thread)
 {
+    // 避免 L2 在做 context switch 的時候把 currentThread 重複加入 readyList
     if (thread != currentThread) {
         readyList->Append(thread); 
         DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << thread->getID() << "] is inserted into queue L[" << queueLevel << "]");
