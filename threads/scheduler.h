@@ -20,13 +20,15 @@ class SchedQueue {
     ~SchedQueue();
 
     Thread* FindNextToRun();
-    virtual Thread* RemoveFromQueue() = 0;
+    virtual Thread* GetNextThread() = 0;
     void InsertIntoQueue(Thread* thread);
-    bool IsEmpty() { return readyList->IsEmpty(); }
+    bool IsEmpty();
+    bool IsCurrentThreadAvailable() {return (currentThread != NULL && currentThread->getStatus() != BLOCKED); }
     void Print() { readyList->Apply(ThreadPrint); }
 
   protected:
     List<Thread *> *readyList;
+    Thread *currentThread;
     int queueLevel;
 
 };
@@ -35,7 +37,7 @@ class L1Queue: public SchedQueue {
   public:
     L1Queue() { queueLevel = 1; };
     ~L1Queue() {};
-    Thread* RemoveFromQueue();
+    Thread* GetNextThread();
 
 };
 
@@ -43,7 +45,7 @@ class L2Queue: public SchedQueue {
   public:
     L2Queue() { queueLevel = 2; };
     ~L2Queue() {};
-    Thread* RemoveFromQueue();
+    Thread* GetNextThread();
 
 };
 
@@ -51,7 +53,7 @@ class L3Queue: public SchedQueue {
   public:
     L3Queue() { queueLevel = 3; };
     ~L3Queue() {};
-    Thread* RemoveFromQueue();
+    Thread* GetNextThread();
 
 };
 

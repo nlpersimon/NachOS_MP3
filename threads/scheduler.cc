@@ -217,6 +217,7 @@ SchedQueue::SchedQueue()
 {
     readyList = new List<Thread *>;
     queueLevel = 0;
+    currentThread = NULL;
 }
 
 SchedQueue::~SchedQueue()
@@ -224,35 +225,52 @@ SchedQueue::~SchedQueue()
     delete readyList;
 }
 
+bool
+SchedQueue::IsEmpty()
+{
+    return (!IsCurrentThreadAvailable() && readyList->IsEmpty());
+}
+
 void
 SchedQueue::InsertIntoQueue(Thread* thread)
 {
-    readyList->Append(thread); 
-    DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "] Thread [" << thread->getID() << "] is inserted into queue L[" << queueLevel << "]");
+    if (thread != currentThread) {
+        readyList->Append(thread); 
+        DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << thread->getID() << "] is inserted into queue L[" << queueLevel << "]");
+    }
 }
 
 Thread*
 SchedQueue::FindNextToRun()
 {
-    Thread *thread = RemoveFromQueue();
-    DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "] Thread [" << thread->getID() << "] is removed from queue L[" << queueLevel << "]");
+    Thread *thread = GetNextThread();
     return thread;
 }
 
 Thread*
-L1Queue::RemoveFromQueue()
+L1Queue::GetNextThread()
 {
     return readyList->RemoveFront();
 }
 
 Thread*
-L2Queue::RemoveFromQueue()
+L2Queue::GetNextThread()
 {
-    return readyList->RemoveFront();
+    if (!IsCurrentThreadAvailable() && !readyList->IsEmpty()) {
+        currentThread = readyList->RemoveFront();
+        DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << currentThread->getID() << "] is removed from queue L[" << queueLevel << "]");
+    }
+    return currentThread;
+    // return readyList->RemoveFront();
 }
 
 Thread*
-L3Queue::RemoveFromQueue()
+L3Queue::GetNextThread()
 {
-    return readyList->RemoveFront();
+    if (!readyList->IsEmpty()) {
+        currentThread = readyList->RemoveFront();
+        DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << currentThread->getID() << "] is removed from queue L[" << queueLevel << "]");
+    }
+    return currentThread;
+    // return readyList->RemoveFront();
 }
