@@ -104,6 +104,7 @@ class Thread {
 	char* getName() { return (name); }
 
   int getPriority() { return (priority); }
+  void setPriority(int priority);
     
 	int getID() { return (ID); }
     void Print() { cout << name; }

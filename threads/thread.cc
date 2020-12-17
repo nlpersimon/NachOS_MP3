@@ -435,3 +435,12 @@ Thread::SelfTest()
     kernel->currentThread->Yield();
     SimpleThread(0);
 }
+
+
+void
+Thread::setPriority(int priority)
+{
+    int oldPriority = this->priority;
+    this->priority = priority;
+    DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << ID << "] change its priority from [" << oldPriority << "] to [" << priority << ']');
+}
