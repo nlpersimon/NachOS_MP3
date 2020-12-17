@@ -257,7 +257,17 @@ Thread*
 L2Queue::GetNextThread()
 {
     if (!IsCurrentThreadAvailable() && !readyList->IsEmpty()) {
-        currentThread = readyList->RemoveFront();
+        int max = -1;
+        ListIterator<Thread *> *iterator = new ListIterator<Thread *>(readyList);
+        Thread *thread;
+        for (; !iterator->IsDone(); iterator->Next()) {
+            thread = iterator->Item();
+            if (thread->getPriority() > max) {
+                max = thread->getPriority();
+                currentThread = thread;
+            }
+        }
+        readyList->Remove(currentThread);
         DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << currentThread->getID() << "] is removed from queue L[" << queueLevel << "]");
     }
     return currentThread;
