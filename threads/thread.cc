@@ -38,6 +38,8 @@ Thread::Thread(char* threadName, int threadID)
 	ID = threadID;
     name = threadName;
     priority = 0;
+    T = 0;
+    burstTime = 0;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
@@ -248,6 +250,8 @@ Thread::Sleep (bool finishing)
     DEBUG(dbgTraCode, "In Thread::Sleep, Sleeping thread: " << name << ", " << kernel->stats->totalTicks);
 
     status = BLOCKED;
+    UpdateBurstTime();
+    setT(0);
 	//cout << "debug Thread::Sleep " << name << "wait for Idle\n";
     while ((nextThread = kernel->scheduler->FindNextToRun()) == NULL) {
 		kernel->interrupt->Idle();	// no one to run, wait for an interrupt
@@ -443,4 +447,12 @@ Thread::setPriority(int priority)
     int oldPriority = this->priority;
     this->priority = priority;
     DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << ID << "] change its priority from [" << oldPriority << "] to [" << priority << ']');
+}
+
+void
+Thread::UpdateBurstTime()
+{
+    float oldBusrtTime = burstTime;
+    burstTime = getCurBurstTime();
+    DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << ID << "] update approximate burst time, from: [" << oldBusrtTime << "], add [" << T << "], to [" << burstTime << ']');
 }
