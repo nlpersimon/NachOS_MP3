@@ -135,24 +135,23 @@ Scheduler::Run (Thread *nextThread, bool finishing)
 {
     Thread *oldThread = kernel->currentThread;
 
-    if (oldThread != nextThread) {
-        DEBUG(dbgSchedule,  "Tick [" << kernel->stats->totalTicks << "]: Thread [" << nextThread->getID() << "] is now selected for execution, thread [" << oldThread->getID() << "] is replaced, and it has executed [" << oldThread->getT() << "] ticks");
     
-        ASSERT(kernel->interrupt->getLevel() == IntOff);
+    ASSERT(kernel->interrupt->getLevel() == IntOff);
 
-        if (finishing) {	// mark that we need to delete current thread
-            ASSERT(toBeDestroyed == NULL);
-        toBeDestroyed = oldThread;
-        }
-        
-        if (oldThread->space != NULL) {	// if this thread is a user program,
-            oldThread->SaveUserState(); 	// save the user's CPU registers
-        oldThread->space->SaveState();
-        }
-        
-        oldThread->CheckOverflow();		    // check if the old thread
-                            // had an undetected stack overflow
-
+    if (finishing) {	// mark that we need to delete current thread
+        ASSERT(toBeDestroyed == NULL);
+    toBeDestroyed = oldThread;
+    }
+    
+    if (oldThread->space != NULL) {	// if this thread is a user program,
+        oldThread->SaveUserState(); 	// save the user's CPU registers
+    oldThread->space->SaveState();
+    }
+    
+    oldThread->CheckOverflow();		    // check if the old thread
+                        // had an undetected stack overflow
+    if (nextThread != oldThread) {
+        DEBUG(dbgSchedule,  "Tick [" << kernel->stats->totalTicks << "]: Thread [" << nextThread->getID() << "] is now selected for execution, thread [" << oldThread->getID() << "] is replaced, and it has executed [" << oldThread->getT() << "] ticks");
         kernel->currentThread = nextThread;  // switch to the next thread
         nextThread->setStatus(RUNNING);      // nextThread is now running
         
@@ -168,8 +167,8 @@ Scheduler::Run (Thread *nextThread, bool finishing)
         // we're back, running oldThread
         
         // interrupts are off when we return from switch!
-        ASSERT(kernel->interrupt->getLevel() == IntOff);
     }
+    ASSERT(kernel->interrupt->getLevel() == IntOff);
 
     DEBUG(dbgThread, "Now in thread: " << oldThread->getName());
 
