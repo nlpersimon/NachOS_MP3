@@ -254,7 +254,28 @@ SchedQueue::FindNextToRun()
 Thread*
 L1Queue::GetNextThread()
 {
-    return readyList->RemoveFront();
+    if (!readyList->IsEmpty()) {
+        int min;
+        if (!IsCurrentThreadAvailable()) {
+            min = -1;
+        } else {
+            min = currentThread->getBurstTime();
+        }
+        ListIterator<Thread *> *iterator = new ListIterator<Thread *>(readyList);
+        Thread *thread, *oldThread=currentThread;
+        for (; !iterator->IsDone(); iterator->Next()) {
+            thread = iterator->Item();
+            if (thread->getBurstTime() < min || min < 0) {
+                min = thread->getBurstTime();
+                currentThread = thread;
+            }
+        }
+        if (oldThread != currentThread) {
+            readyList->Remove(currentThread);
+            DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << currentThread->getID() << "] is removed from queue L[" << queueLevel << "]");
+        }
+    }
+    return currentThread;
 }
 
 Thread*
