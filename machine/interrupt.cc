@@ -157,6 +157,7 @@ Interrupt::OneTick()
     } else {
 	stats->totalTicks += UserTick;
 	stats->userTicks += UserTick;
+    kernel->currentThread->AccumT(UserTick);
     }
     DEBUG(dbgInt, "== Tick " << stats->totalTicks << " ==");
 

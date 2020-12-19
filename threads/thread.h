@@ -111,6 +111,7 @@ class Thread {
   float getCurBurstTime() { return (0.5 * T + 0.5 * burstTime); }
   int getT() { return T; }
   void setT(int newT) { T = newT; }
+  void AccumT(int ticks) { T += ticks; }
     
 	int getID() { return (ID); }
     void Print() { cout << name; }
