@@ -447,11 +447,10 @@ Thread::SelfTest()
 void
 Thread::setPriority(int priority)
 {
-    if (priority < 150) {
-        int oldPriority = this->priority;
-        this->priority = priority;
-        DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << ID << "] change its priority from [" << oldPriority << "] to [" << priority << ']');
-    }
+    int newPriority = min(max(priority, 0), 149);
+    int oldPriority = this->priority;
+    this->priority = newPriority;
+    DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << ID << "] change its priority from [" << oldPriority << "] to [" << priority << ']');
 }
 
 void
