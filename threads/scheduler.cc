@@ -287,7 +287,7 @@ SchedQueue::FindNextToRun()
 void
 SchedQueue::AccumWaitTicks(int ticks)
 {
-    if (currentThread != NULL && currentThread != kernel->currentThread) {
+    if ((currentThread != NULL) && (currentThread != kernel->currentThread)) {
         //DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "] queue L[" << queueLevel << "] is accumulating waiting ticks");
         currentThread->AccumWaitTicks(ticks);
     }
