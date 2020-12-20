@@ -112,6 +112,10 @@ class Thread {
   int getT() { return T; }
   void setT(int newT) { T = newT; }
   void AccumT(int ticks) { T += ticks; }
+  int getWaitTicks() { return waitTicks; }
+  void setWaitTicks(int newWaitTicks) { waitTicks = newWaitTicks; }
+  void AccumWaitTicks(int ticks) { waitTicks += ticks; }
+  void UpdatePriorityByWaitTicks();
     
 	int getID() { return (ID); }
     void Print() { cout << name; }
@@ -129,6 +133,7 @@ class Thread {
   int priority;
   int T;
   float burstTime;
+  int waitTicks;
     void StackAllocate(VoidFunctionPtr func, void *arg);
     				// Allocate a stack for thread.
 				// Used internally by Fork()

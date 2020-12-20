@@ -40,6 +40,7 @@ Thread::Thread(char* threadName, int threadID)
     priority = 0;
     T = 0;
     burstTime = 0;
+    waitTicks = 0;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
@@ -212,7 +213,9 @@ Thread::Yield ()
     
     nextThread = kernel->scheduler->FindNextToRun();
     if (nextThread != NULL) {
-	kernel->scheduler->ReadyToRun(this);
+    if (nextThread != kernel->currentThread) {
+	    kernel->scheduler->ReadyToRun(this);
+    }
 	kernel->scheduler->Run(nextThread, FALSE);
     }
     (void) kernel->interrupt->SetLevel(oldLevel);
@@ -444,9 +447,11 @@ Thread::SelfTest()
 void
 Thread::setPriority(int priority)
 {
-    int oldPriority = this->priority;
-    this->priority = priority;
-    DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << ID << "] change its priority from [" << oldPriority << "] to [" << priority << ']');
+    if (priority < 150) {
+        int oldPriority = this->priority;
+        this->priority = priority;
+        DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << ID << "] change its priority from [" << oldPriority << "] to [" << priority << ']');
+    }
 }
 
 void
@@ -455,4 +460,13 @@ Thread::UpdateBurstTime()
     float oldBusrtTime = burstTime;
     burstTime = getCurBurstTime();
     DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "]: Thread [" << ID << "] update approximate burst time, from: [" << oldBusrtTime << "], add [" << T << "], to [" << burstTime << ']');
+}
+
+void
+Thread::UpdatePriorityByWaitTicks()
+{
+    if (waitTicks >= 1500) {
+        waitTicks = 0;
+        setPriority(priority + 10);
+    }
 }

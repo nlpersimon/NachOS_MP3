@@ -158,6 +158,8 @@ Interrupt::OneTick()
 	stats->totalTicks += UserTick;
 	stats->userTicks += UserTick;
     kernel->currentThread->AccumT(UserTick);
+    kernel->scheduler->AccumWaitTicks(UserTick);
+    kernel->scheduler->UpdatePriority();
     }
     DEBUG(dbgInt, "== Tick " << stats->totalTicks << " ==");
 

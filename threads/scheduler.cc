@@ -61,9 +61,16 @@ void
 Scheduler::ReadyToRun (Thread *thread)
 {
     ASSERT(kernel->interrupt->getLevel() == IntOff);
-    int queueLevel = priorityToLevel(thread->getPriority());
 	//cout << "Putting thread on ready list: " << thread->getName() << endl ;
     thread->setStatus(READY);
+    AssignToQueue(thread);
+
+}
+
+void
+Scheduler::AssignToQueue(Thread *thread)
+{
+    int queueLevel = priorityToLevel(thread->getPriority());
     if (queueLevel == 1) {
         L1->InsertIntoQueue(thread);
     } else if (queueLevel == 2) {
@@ -194,6 +201,15 @@ void
 Scheduler::CheckToBeDestroyed()
 {
     if (toBeDestroyed != NULL) {
+        if (toBeDestroyed == L1->currentThread) {
+            L1->currentThread = NULL;
+        }
+        else if (toBeDestroyed == L2->currentThread) {
+            L2->currentThread = NULL;
+        }
+        else if (toBeDestroyed == L3->currentThread) {
+            L3->currentThread = NULL;
+        }
         delete toBeDestroyed;
 	toBeDestroyed = NULL;
     }
@@ -213,6 +229,22 @@ Scheduler::Print()
     L2->Print();
     cout << "L3 contents:\n";
     L3->Print();
+}
+
+void
+Scheduler::AccumWaitTicks(int ticks)
+{
+    L1->AccumWaitTicks(ticks);
+    L2->AccumWaitTicks(ticks);
+    L3->AccumWaitTicks(ticks);
+}
+
+void
+Scheduler::UpdatePriority()
+{
+    L1->UpdatePriority();
+    L2->UpdatePriority();
+    L3->UpdatePriority();
 }
 
 
@@ -248,7 +280,54 @@ Thread*
 SchedQueue::FindNextToRun()
 {
     Thread *thread = GetNextThread();
+    //thread->setWaitTicks(0);
     return thread;
+}
+
+void
+SchedQueue::AccumWaitTicks(int ticks)
+{
+    if (currentThread != NULL && currentThread != kernel->currentThread) {
+        //DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "] queue L[" << queueLevel << "] is accumulating waiting ticks");
+        currentThread->AccumWaitTicks(ticks);
+    }
+    if (!readyList->IsEmpty()) {
+        ListIterator<Thread *> *iterator = new ListIterator<Thread *>(readyList);
+        Thread *thread;
+        for (; !iterator->IsDone(); iterator->Next()) {
+            //DEBUG(dbgSchedule, "Tick [" << kernel->stats->totalTicks << "] queue L[" << queueLevel << "] is accumulating waiting ticks");
+            thread = iterator->Item();
+            thread->AccumWaitTicks(ticks);
+        }
+    }
+}
+
+void
+SchedQueue::UpdatePriority()
+{
+    if (currentThread != NULL) {
+        int oldPriority = currentThread->getPriority();
+        currentThread->UpdatePriorityByWaitTicks();
+        int newPriority = currentThread->getPriority();
+        if ((currentThread != kernel->currentThread) && (kernel->scheduler->priorityToLevel(newPriority) != kernel->scheduler->priorityToLevel(oldPriority))) {
+            kernel->scheduler->AssignToQueue(currentThread);
+            currentThread = NULL;
+        }
+    }
+    if (!readyList->IsEmpty()) {
+        ListIterator<Thread *> *iterator = new ListIterator<Thread *>(readyList);
+        Thread *thread;
+        for (; !iterator->IsDone(); iterator->Next()) {
+            thread = iterator->Item();
+            int oldPriority = thread->getPriority();
+            thread->UpdatePriorityByWaitTicks();
+            int newPriority = thread->getPriority();
+            if (kernel->scheduler->priorityToLevel(newPriority) != kernel->scheduler->priorityToLevel(oldPriority)) {
+                readyList->Remove(thread);
+                kernel->scheduler->AssignToQueue(thread);
+            }
+        }
+    }
 }
 
 Thread*
