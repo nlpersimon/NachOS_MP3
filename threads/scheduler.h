@@ -23,7 +23,7 @@ class SchedQueue {
     virtual Thread* GetNextThread() = 0;
     void InsertIntoQueue(Thread* thread);
     bool IsEmpty();
-    bool IsCurrentThreadAvailable() {return (currentThread != NULL && currentThread->getStatus() != BLOCKED); }
+    bool IsCurrentThreadAvailable() {return (currentThread != NULL) && (currentThread->getStatus() != BLOCKED); }
     void Print() { readyList->Apply(ThreadPrint); }
     void AccumWaitTicks(int ticks);
     void UpdatePriority();
